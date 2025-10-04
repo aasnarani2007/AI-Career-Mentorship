@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en" class="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Mentor - Your Personal Career Guide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/phosphor-icons/1.4.2/css/phosphor.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f0f4f8;
+            --card-bg-color: white;
+            --text-color: #1e293b;
+            --text-muted-color: #64748b;
+            --border-color: #e2e8f0;
+            --primary-btn-bg: linear-gradient(45deg, #4f46e5, #7c3aed);
+            --primary-btn-hover-bg: linear-gradient(45deg, #4338ca, #6d28d9);
+            --progress-bar-bg: #e0e7ff;
+            --progress-bar-fill: #4f46e5;
+            --glow-color: rgba(79, 70, 229, 0.3);
+            --focus-border-color: #4f46e5;
+        }
+        html.dark {
+            --bg-color: #0f172a;
+            --card-bg-color: #1e293b;
+            --text-color: #e2e8f0;
+            --text-muted-color: #94a3b8;
+            --border-color: #334155;
+            --primary-btn-bg: linear-gradient(45deg, #6366f1, #8b5cf6);
+            --primary-btn-hover-bg: linear-gradient(45deg, #4f46e5, #7c3aed);
+            --progress-bar-bg: #334155;
+            --progress-bar-fill: #6366f1;
+            --glow-color: rgba(99, 102, 241, 0.4);
+            --focus-border-color: #6366f1;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .step-container {
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+        }
+        .hidden { display: none; }
+        .card {
+            background-color: var(--card-bg-color);
+            border: 1px solid var(--border-color);
+            transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -2px rgba(0,0,0,0.05);
+        }
+        .btn-primary { 
+            background: var(--primary-btn-bg);
+            background-size: 200% 200%;
+            transition: background-position 0.5s, transform 0.2s, opacity 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-primary:hover { 
+            background-position: right center;
+            transform: scale(1.05);
+        }
+        .btn-primary:disabled {
+            background: var(--text-muted-color);
+            cursor: not-allowed;
+            opacity: 0.5;
+            transform: scale(1);
+        }
+        .choice-card {
+             position: relative;
+             overflow: hidden;
+        }
+        .choice-card:hover { 
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 0 20px 5px var(--glow-color);
+        }
+        .choice-card:hover .ph {
+            animation: icon-bounce 0.6s;
+        }
+        .loader {
+            width: 1rem; height: 1rem; border: 2px solid var(--text-color);
+            border-bottom-color: transparent; border-radius: 50%;
+            display: inline-block; box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+        .loader-light { border-color: #fff; border-bottom-color: transparent; }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Animations */
+        @keyframes slideInFromRight { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes slideOutToLeft { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(-30px); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes icon-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .slide-in { animation: slideInFromRight 0.5s forwards; }
+        .slide-out { animation: slideOutToLeft 0.5s forwards; }
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; animation-delay: var(--delay, 0s); opacity: 0; }
+        
+        /* New Robot Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+        @keyframes wave {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-25deg); }
+            50% { transform: rotate(10deg); }
+            75% { transform: rotate(-25deg); }
+        }
+        #waving-robot {
+            animation: float 4s ease-in-out infinite;
+        }
+        #robot-arm {
+            transform-origin: 50px 90px; /* Joint of the arm */
+            animation: wave 2.5s ease-in-out infinite;
+            animation-delay: 0.5s;
+        }
+
+        /* Ripple effect */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            transform: scale(0);
+            animation: ripple 600ms linear;
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+        @keyframes ripple { to { transform: scale(4); opacity: 0; } }
+
+        /* Toast Notification */
+        #toast {
+            position: fixed; bottom: -100px; left: 50%;
+            transform: translateX(-50%); background-color: #22c55e; color: white;
+            padding: 1rem 1.5rem; border-radius: 8px; font-weight: 500;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: bottom 0.5s; z-index: 100;
+        }
+        #toast.show { bottom: 20px; }
+
+        /* Progress Bar */
+        #progress-bar-container {
+            width: 100%;
+            background-color: var(--progress-bar-bg);
+            border-radius: 9999px;
+            height: 8px;
+            transition: background-color 0.3s;
+        }
+        #progress-bar {
+            width: 0%;
+            height: 100%;
+            background-color: var(--progress-bar-fill);
+            border-radius: 9999px;
+            transition: width 0.5s ease-out, background-color 0.3s;
+        }
+        
+        .quiz-option {
+            transition: background-color 0.2s, border-color 0.2s, transform 0.2s;
+        }
+        .quiz-option.selected {
+            background-color: #e0e7ff;
+            border-color: #4f46e5;
+            transform: scale(1.03);
+        }
+        html.dark .quiz-option.selected {
+            background-color: #3730a3;
+            border-color: #6366f1;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <!-- API Error Banner -->
+    <div id="api-error-banner" class="hidden fixed top-0 left-0 right-0 bg-red-500 text-white p-3 text-center text-sm z-50">
+        <strong>API Error:</strong> The Gemini API key is not configured. AI features will not work. Please add your key to the `apiKey` variable in the script.
+    </div>
+    
+    <!-- Dark Mode Toggle -->
+    <div class="fixed top-4 right-4 z-10">
+        <label for="dark-mode-toggle" class="flex items-center cursor-pointer">
+            <div class="relative">
+                <input type="checkbox" id="dark-mode-toggle" class="sr-only" onchange="toggleDarkMode()">
+                <div class="block bg-gray-600 w-14 h-8 rounded-full"></div>
+                <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition"></div>
+            </div>
+        </label>
+    </div>
+    
+    <!-- Persistent Animated Robot -->
+    <div id="waving-robot" class="fixed bottom-4 left-4 w-48 h-48 pointer-events-none z-20 hidden md:block">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <rect x="50" y="70" width="100" height="100" rx="15" fill="var(--card-bg-color)" stroke="var(--border-color)" stroke-width="4"/>
+            <rect x="70" y="30" width="60" height="40" rx="10" fill="var(--card-bg-color)" stroke="var(--border-color)" stroke-width="4"/>
+            <circle cx="100" cy="20" r="5" fill="#4f46e5"/>
+            <circle cx="85" cy="50" r="5" fill="#1e293b" class="dark:fill-white"/>
+            <circle cx="115" cy="50" r="5" fill="#1e293b" class="dark:fill-white"/>
+            <rect x="65" y="90" width="70" height="50" rx="5" fill="#e0e7ff" class="dark:fill-slate-700"/>
+            <text x="100" y="110" font-family="Inter, sans-serif" font-size="9" fill="#1e293b" class="dark:fill-slate-200" text-anchor="middle" font-weight="600">
+                <tspan x="100" dy="-9">BY CODING</tspan>
+                <tspan x="100" dy="12">AND</tspan>
+                <tspan x="100" dy="12">HARMONY</tspan>
+            </text>
+            <line x1="150" y1="90" x2="180" y2="120" stroke="var(--border-color)" stroke-width="12" stroke-linecap="round"/>
+            <circle cx="180" cy="120" r="8" fill="var(--card-bg-color)" stroke="var(--border-color)" stroke-width="4"/>
+            <g id="robot-arm">
+                <line x1="50" y1="90" x2="20" y2="60" stroke="var(--border-color)" stroke-width="12" stroke-linecap="round"/>
+                <circle cx="20" cy="60" r="8" fill="var(--card-bg-color)" stroke="var(--border-color)" stroke-width="4"/>
+            </g>
+        </svg>
+    </div>
+
+    <div class="w-full max-w-2xl mx-auto">
+        <!-- Progress Bar -->
+        <div id="progress-bar-container" class="mb-4">
+            <div id="progress-bar"></div>
+        </div>
+
+        <!-- Welcome Step -->
+        <div id="welcome-step" class="step-container text-center card p-8">
+            <img src="image_dee807.jpg" onerror="this.onerror=null;this.src='https://placehold.co/600x400/0f172a/e2e8f0?text=AI+Mentor';" alt="AI Career Mentorship" class="rounded-xl mb-6 w-full h-auto max-w-md mx-auto fade-in">
+            <h1 class="text-3xl font-bold mt-4 fade-in" style="--delay: 0.1s;">Welcome to Your AI Mentor</h1>
+            <p class="mt-4 text-muted-color fade-in" style="--delay: 0.2s;">I use AI to help you navigate your career path. Let's build a tailored roadmap just for you.</p>
+            <button onclick="showStep('profile-step')" class="btn-primary mt-8 px-8 py-3 rounded-lg font-semibold fade-in" style="--delay: 0.4s;">Let's Get Started</button>
+        </div>
+
+        <!-- Profile Info Step -->
+        <div id="profile-step" class="step-container hidden card p-8">
+            <h2 class="text-2xl font-bold flex items-center"><i class="ph-user-list mr-3 text-2xl text-indigo-500"></i>Let's Build Your Profile</h2>
+             <div class="mt-6 space-y-6">
+                 <div class="fade-in">
+                    <label for="name" class="block text-sm font-medium">What should I call you?</label>
+                    <input type="text" id="name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-transparent" placeholder="Your Name">
+                </div>
+                <div class="fade-in" style="--delay: 0.1s;">
+                    <label class="block text-sm font-medium">What are your key skills?</label>
+                    <input type="text" id="skills-input" onkeydown="handleTagInput(event, 'skills')" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-transparent" placeholder="e.g., Python, C++. Press Enter to add.">
+                    <div id="skills-tags" class="mt-2 flex flex-wrap gap-2"></div>
+                </div>
+                <div class="fade-in" style="--delay: 0.2s;">
+                    <label class="block text-sm font-medium">What are your interests or hobbies?</label>
+                    <input type="text" id="interests-input" onkeydown="handleTagInput(event, 'interests')" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-transparent" placeholder="e.g., AI, Writing. Press Enter to add.">
+                    <div id="interests-tags" class="mt-2 flex flex-wrap gap-2"></div>
+                </div>
+                 <div class="fade-in" style="--delay: 0.3s;">
+                    <label for="projects" class="block text-sm font-medium">Tell me about a project you're proud of. (Optional)</label>
+                    <textarea id="projects" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-transparent"></textarea>
+                </div>
+                <div class="fade-in" style="--delay: 0.4s;">
+                     <label for="ug-stream" class="block text-sm font-medium">Undergraduate Background</label>
+                     <div class="flex space-x-2 mt-1">
+                        <select id="ug-stream" class="block w-full rounded-md border-gray-300 shadow-sm bg-card-bg-color">
+                            <option>B.Tech CSE</option>
+                            <option>B.Tech ECE</option>
+                            <option>B.Tech Mechanical</option>
+                            <option>B.Com</option>
+                            <option>BBA</option>
+                            <option>B.A. History</option>
+                            <option>B.A. Political Science</option>
+                            <option>B.Sc. Physics</option>
+                            <option>B.Sc. Chemistry</option>
+                        </select>
+                        <input type="text" id="ug-marks" class="block w-1/3 rounded-md border-gray-300 shadow-sm bg-transparent" placeholder="CGPA/%">
+                     </div>
+                </div>
+                 <div class="fade-in" style="--delay: 0.5s;">
+                    <label class="block text-sm font-medium">Do you have a resume?</label>
+                    <div id="resume-feedback" class="text-sm text-green-500 mt-1"></div>
+                    <div class="flex items-center space-x-4 mt-2">
+                        <label for="resume" class="cursor-pointer text-sm font-semibold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-200">
+                           📤 Upload File
+                           <input type="file" id="resume" class="hidden">
+                        </label>
+                         <span class="text-muted-color">or</span>
+                        <button onclick="startQuiz()" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-200">
+                           🤖 Build with AI Quiz
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8 flex justify-between items-center">
+                <button onclick="showStep('welcome-step')" class="text-sm font-semibold text-muted-color hover:text-color transition-colors">← Back</button>
+                <button id="profile-next-btn" onclick="saveProfileAndProceed()" class="btn-primary px-6 py-2 rounded-lg font-semibold">Next: Define Your Goal →</button>
+            </div>
+        </div>
+        
+        <!-- Quiz Step -->
+        <div id="quiz-step" class="step-container hidden card p-8">
+            <div class="flex items-start space-x-4">
+                <div class="w-24 h-24 text-6xl flex-shrink-0 -mt-4">
+                    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="50" y="70" width="100" height="100" rx="15" fill="var(--card-bg-color)" stroke="var(--border-color)" stroke-width="4"/>
+                        <rect x="70" y="30" width="60" height="40" rx="10" fill="var(--card-bg-color)" stroke="var(--border-color)" stroke-width="4"/>
+                        <circle cx="100" cy="20" r="5" fill="#4f46e5"/>
+                        <circle cx="85" cy="50" r="5" fill="#1e293b" class="dark:fill-white"/>
+                        <circle cx="115" cy="50" r="5" fill="#1e293b" class="dark:fill-white"/>
+                    </svg>
+                </div>
+                <div>
+                     <h2 class="text-2xl font-bold">🤖 AI Resume Builder Quiz</h2>
+                     <p class="mt-2 text-muted-color">Answer a few questions, and I'll generate a professional summary for you!</p>
+                </div>
+            </div>
+
+             <div id="quiz-questions" class="mt-6 space-y-6">
+                <!-- Questions will be injected here -->
+             </div>
+
+            <div class="mt-8 flex justify-between items-center">
+                <button onclick="showStep('profile-step')" class="text-sm font-semibold text-muted-color hover:text-color transition-colors">← Back to Profile</button>
+                <button id="quiz-submit-btn" onclick="processQuiz()" class="btn-primary px-6 py-2 rounded-lg font-semibold">Generate My Summary</button>
+            </div>
+        </div>
+
+        <!-- Career Direction Step -->
+        <div id="direction-step" class="step-container hidden card p-8">
+            <h2 class="text-2xl font-bold flex items-center"><i class="ph ph-path mr-3 text-2xl text-indigo-500"></i>Choose Your Career Direction</h2>
+            <p id="direction-prompt" class="mt-2 text-muted-color">Hello! What is your primary career goal right now?</p>
+            <div class="mt-6 grid gap-6 sm:grid-cols-3">
+                <div onclick="handleDirectionChoice('job-roles')" class="choice-card text-center p-6 border rounded-lg border-border-color cursor-pointer transition-all duration-300 fade-in" style="--delay: 0.1s;">
+                    <div class="text-4xl"><i class="ph ph-briefcase"></i></div><h3 class="mt-4 text-lg font-semibold">Job Roles</h3><p class="mt-1 text-sm text-muted-color">Get an AI-powered learning roadmap.</p>
+                </div>
+                 <div onclick="handleDirectionChoice('higher-studies')" class="choice-card text-center p-6 border rounded-lg border-border-color cursor-pointer transition-all duration-300 fade-in" style="--delay: 0.2s;">
+                    <div class="text-4xl"><i class="ph ph-graduation-cap"></i></div><h3 class="mt-4 text-lg font-semibold">Higher Studies</h3><p class="mt-1 text-sm text-muted-color">Find colleges and exam strategies.</p>
+                </div>
+                 <div onclick="handleDirectionChoice('competitive-exams')" class="choice-card text-center p-6 border rounded-lg border-border-color cursor-pointer transition-all duration-300 fade-in" style="--delay: 0.3s;">
+                    <div class="text-4xl"><i class="ph ph-bank"></i></div><h3 class="mt-4 text-lg font-semibold">Competitive Exams</h3><p class="mt-1 text-sm text-muted-color">Discover resources for government jobs.</p>
+                </div>
+            </div>
+            <div class="mt-8">
+                <button onclick="showStep('profile-step')" class="text-sm font-semibold text-muted-color hover:text-color transition-colors">← Back to Profile</button>
+            </div>
+        </div>
+
+        <!-- Dynamic Content Step (for paths) -->
+        <div id="path-step" class="step-container hidden card p-8">
+            <div id="path-content"></div>
+            <div class="mt-8">
+                <button onclick="showStep('direction-step')" class="text-sm font-semibold text-muted-color hover:text-color transition-colors">← Back to Directions</button>
+            </div>
+        </div>
+
+        <!-- Summary Step -->
+        <div id="summary-step" class="step-container hidden card p-8">
+            <div id="summary-content-to-pdf">
+                 <h2 class="text-2xl font-bold flex items-center"><i class="ph ph-scroll mr-3 text-2xl text-indigo-500"></i>Your Personalized Career Plan</h2>
+                <div class="mt-6 p-4 border rounded-lg bg-white/5 border-border-color fade-in">
+                    <h3 class="font-semibold text-lg">👤 Profile Summary</h3>
+                    <div id="summary-profile" class="mt-2 text-sm text-muted-color space-y-1"></div>
+                </div>
+                <div id="profile-strength-analysis" class="mt-4"></div>
+                <div id="ai-resume-summary" class="mt-4"></div>
+                <div id="skill-gap-analysis" class="mt-4"></div>
+                <div id="summary-plan" class="mt-4 fade-in" style="--delay: 0.2s;"></div>
+                <div id="ai-features" class="mt-4 fade-in" style="--delay: 0.3s;"></div>
+                <div id="project-ideas" class="mt-4"></div>
+                <div id="day-in-life" class="mt-4"></div>
+                <div id="interview-prep" class="mt-4"></div>
+                <div id="resource-hub" class="mt-4 fade-in" style="--delay: 0.4s;"></div>
+            </div>
+            <div class="mt-8 flex justify-between items-center">
+                 <button onclick="showStep(userData.direction === 'job-roles' || userData.direction === 'higher-studies' || userData.direction === 'competitive-exams' ? 'path-step' : 'direction-step')" class="text-sm font-semibold text-muted-color hover:text-color transition-colors">← Go Back</button>
+                 <button id="download-pdf-btn" onclick="generatePDF()" class="btn-primary px-6 py-2 rounded-lg font-semibold">Download Report (PDF)</button>
+            </div>
+             <div class="mt-8 border-t border-border-color pt-6">
+                <button onclick="showStep('feedback-step')" class="w-full btn-primary px-6 py-2 rounded-lg font-semibold">Finish & Give Feedback</button>
+            </div>
+        </div>
+
+        <!-- Feedback & Goodbye Steps -->
+        <div id="feedback-step" class="step-container hidden card p-8 text-center">
+            <h2 class="text-2xl font-bold">👍 Was this helpful?</h2>
+             <div class="mt-6 flex justify-center space-x-4">
+                <button onclick="handleFeedback(true)" class="text-4xl p-4 rounded-full hover:bg-white/10 transition transform hover:scale-125">👍</button>
+                <button onclick="handleFeedback(false)" class="text-4xl p-4 rounded-full hover:bg-white/10 transition transform hover:scale-125">👎</button>
+             </div>
+             <div id="feedback-response" class="mt-4 font-medium"></div>
+             <div class="mt-6">
+                <button onclick="showStep('summary-step')" class="text-sm font-semibold text-muted-color hover:text-color transition-colors">← Back to Summary</button>
+            </div>
+        </div>
+        <div id="goodbye-step" class="step-container hidden card p-8 text-center relative">
+             <canvas id="confetti-canvas" class="absolute top-0 left-0 w-full h-full"></canvas>
+             <i class="ph ph-rocket-launch text-5xl text-indigo-500"></i>
+            <h2 class="text-2xl font-bold mt-4">👋 Thank You!</h2>
+            <p class="mt-2 text-muted-color">Best of luck on your career journey, <span id="final-user-name"></span>!</p>
+            <div class="mt-8 flex justify-center space-x-4">
+                <button onclick="restart()" class="btn-secondary px-6 py-2 rounded-lg font-semibold">🔁 Start New Session</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="toast"></div>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script>
+        // --- GEMINI API SETUP ---
+        const apiKey = "AIzaSyCF7x2V7fqHNrTwdfgips-VhJjqH_qAuck"; 
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+        const userData = { name: '', skills: [], interests: [], projects: '', ugStream: '', ugMarks: '', direction: '', pathSelection: '', aiSummary: '', resumeScore: 0 };
+        
+        const careerData = {
+            'resources': {
+                'Software Engineer': { 'Job Boards': 'LinkedIn, AngelList', 'Communities': 'Stack Overflow, GitHub', 'Tools': 'VS Code, Docker' },
+                'Data Analyst': { 'Job Boards': 'Kaggle Jobs, LinkedIn', 'Communities': 'Kaggle, /r/datascience', 'Tools': 'Tableau, Power BI, Jupyter' },
+                'Financial Analyst': { 'Job Boards': 'eFinancialCareers, LinkedIn', 'Communities': 'Wall Street Oasis', 'Tools': 'Excel, Bloomberg Terminal' },
+                'default': { 'Job Boards': 'LinkedIn, Indeed', 'Communities': 'Reddit (relevant subreddits)', 'Tools': 'Google Workspace' }
+            }
+        };
+
+        const progressMap = { 'welcome-step': 0, 'profile-step': 25, 'quiz-step': 35, 'direction-step': 50, 'path-step': 75, 'summary-step': 100, 'feedback-step': 100, 'goodbye-step': 100 };
+        let currentStepId = 'welcome-step';
+
+        // --- Core App Logic ---
+        window.onload = () => {
+            if (!apiKey) {
+                document.getElementById('api-error-banner').classList.remove('hidden');
+            }
+            document.getElementById('resume').addEventListener('change', simulateResumeParse);
+            checkDarkModePreference();
+            showStep(currentStepId, true); // Initial load
+
+            document.querySelectorAll('.btn-primary').forEach(button => {
+                button.addEventListener('click', createRipple);
+            });
+        };
+
+        function showStep(stepId, isInitial = false) {
+            const currentStep = document.getElementById(currentStepId);
+            const nextStep = document.getElementById(stepId);
+            
+            updateProgressBar(stepId);
+
+            if (stepId === 'goodbye-step') triggerConfetti();
+            
+            if (isInitial) {
+                if(nextStep) {
+                    nextStep.classList.remove('hidden');
+                    nextStep.classList.add('slide-in');
+                    currentStepId = stepId;
+                }
+                return;
+            }
+
+            if (currentStep) {
+                currentStep.classList.add('slide-out');
+                setTimeout(() => {
+                    currentStep.classList.add('hidden');
+                    currentStep.classList.remove('slide-out');
+                    if (nextStep) {
+                        nextStep.classList.remove('hidden');
+                        nextStep.classList.add('slide-in');
+                        currentStepId = stepId;
+                    }
+                }, 500);
+            }
+        }
+        
+        function updateProgressBar(stepId) {
+            const progress = progressMap[stepId] || 0;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+        }
+        
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 3000);
+        }
+        
+        function createRipple(event) {
+            const button = event.currentTarget;
+            const circle = document.createElement("span");
+            const diameter = Math.max(button.clientWidth, button.clientHeight);
+            const radius = diameter / 2;
+
+            circle.style.width = circle.style.height = `${diameter}px`;
+            circle.style.left = `${event.clientX - button.offsetLeft - radius}px`;
+            circle.style.top = `${event.clientY - button.offsetTop - radius}px`;
+            circle.classList.add("ripple");
+
+            const ripple = button.getElementsByClassName("ripple")[0];
+            if (ripple) ripple.remove();
+            button.appendChild(circle);
+        }
+
+        // --- Profile Step Logic ---
+        function handleTagInput(event, type) {
+            if (event.key !== 'Enter') return;
+            event.preventDefault();
+            const input = event.target;
+            const value = input.value.trim();
+            if (value && !userData[type].includes(value)) {
+                userData[type].push(value);
+                renderTags(type);
+            }
+            input.value = '';
+        }
+
+        function renderTags(type) {
+            const container = document.getElementById(`${type}-tags`);
+            if(!container) return;
+            container.innerHTML = userData[type].map(tag => `
+                <span class="fade-in inline-flex items-center px-2.5 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
+                    ${tag}
+                    <button class="ml-1.5 flex-shrink-0 text-indigo-500 hover:text-indigo-700" onclick="removeTag('${type}', '${tag}')">&times;</button>
+                </span>`).join('');
+        }
+
+        function removeTag(type, tagToRemove) {
+            userData[type] = userData[type].filter(tag => tag !== tagToRemove);
+            renderTags(type);
+        }
+
+        async function simulateResumeParse(event) {
+            const feedbackDiv = document.getElementById('resume-feedback');
+            if (!event.target.files.length) return;
+            
+            feedbackDiv.textContent = '🤖 AI is analyzing your resume...';
+            const nextBtn = document.getElementById('profile-next-btn');
+            nextBtn.disabled = true;
+            
+            const prompt = `Act as an expert resume parser. A user has a degree in "${document.getElementById('ug-stream').value}". Based *strictly* on this academic background, suggest 5 relevant technical and soft skills one would expect to find on their resume. Do not include skills from other fields. Return only a simple comma-separated list. For example, if the degree is in History, suggest skills like "Archival Research, Critical Analysis, Primary Source Interpretation".`;
+            
+            const newSkillsText = await callGeminiAPI(prompt);
+
+            if (typeof newSkillsText === 'string' && !newSkillsText.includes('<p')) {
+                const newSkills = newSkillsText.split(',').map(s => s.trim()).filter(Boolean);
+                newSkills.forEach(s => {
+                    const formattedSkill = s.charAt(0).toUpperCase() + s.slice(1);
+                    if (!userData.skills.includes(formattedSkill)) {
+                        userData.skills.push(formattedSkill);
+                    }
+                });
+                renderTags('skills');
+                feedbackDiv.textContent = '✅ AI analysis complete. New skills added!';
+            } else {
+                feedbackDiv.textContent = '⚠️ Could not analyze resume. Please add skills manually.';
+            }
+            nextBtn.disabled = false;
+        }
+
+        function saveProfileAndProceed() {
+            userData.name = document.getElementById('name').value;
+            userData.projects = document.getElementById('projects').value;
+            userData.ugStream = document.getElementById('ug-stream').value;
+            userData.ugMarks = document.getElementById('ug-marks').value;
+            const directionPrompt = document.getElementById('direction-prompt');
+            if (directionPrompt) {
+                directionPrompt.innerHTML = `Great profile, <span class="font-semibold text-color">${userData.name || 'friend'}</span>! With your background in ${userData.ugStream}, you've got some amazing options. What's your primary goal right now?`;
+            }
+            showStep('direction-step');
+        }
+        
+        // --- Quiz Logic ---
+        const quizData = [
+            {
+                question: "Which of these fields excites you the most?",
+                options: ["Technology & Programming", "Business & Finance", "Creative Arts & Design", "Science & Research"],
+                type: "radio",
+                id: "fieldInterest"
+            },
+            {
+                question: "What kind of work do you find most engaging?",
+                options: ["Building things and solving logical puzzles", "Analyzing data and creating strategies", "Designing visuals and user experiences", "Conducting experiments and writing reports"],
+                type: "radio",
+                id: "workType"
+            },
+            {
+                question: "Describe a small project (personal, academic, or professional) you've worked on.",
+                type: "textarea",
+                id: "projectDescription"
+            },
+            {
+                question: "List a few skills you have or want to learn.",
+                type: "text",
+                id: "quizSkills"
+            }
+        ];
+
+        function startQuiz() {
+            const questionsContainer = document.getElementById('quiz-questions');
+            let html = '';
+            quizData.forEach((q, index) => {
+                html += `<div class="fade-in" style="--delay: ${index * 0.15}s">
+                            <label class="block text-sm font-medium mb-2">${index+1}. ${q.question}</label>`;
+                if (q.type === 'radio') {
+                    html += `<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">`;
+                    q.options.forEach(opt => {
+                        html += `<div onclick="selectQuizOption(this)" class="quiz-option p-3 border rounded-lg cursor-pointer">${opt}</div>`;
+                    });
+                    html += `</div>`;
+                } else if (q.type === 'textarea') {
+                    html += `<textarea id="${q.id}" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-transparent"></textarea>`;
+                } else {
+                     html += `<input type="text" id="${q.id}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-transparent" placeholder="e.g., Python, Communication. Use commas.">`;
+                }
+                html += `</div>`;
+            });
+            questionsContainer.innerHTML = html;
+            showStep('quiz-step');
+        }
+        
+        function selectQuizOption(element) {
+            Array.from(element.parentElement.children).forEach(child => child.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        async function processQuiz() {
+            const submitBtn = document.getElementById('quiz-submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loader loader-light"></span> Generating...';
+
+            const answers = {
+                field: document.querySelector('#quiz-questions > div:nth-child(1) .selected')?.innerText || 'Not specified',
+                work: document.querySelector('#quiz-questions > div:nth-child(2) .selected')?.innerText || 'Not specified',
+                project: document.getElementById('projectDescription').value,
+                skills: document.getElementById('quizSkills').value,
+            };
+            
+            // Update projects data from quiz
+            if(answers.project && !userData.projects) userData.projects = answers.project;
+
+            const quizSkills = answers.skills.split(',').map(s => s.trim()).filter(Boolean);
+            quizSkills.forEach(s => { if (!userData.skills.includes(s)) userData.skills.push(s); });
+            
+            if(answers.field !== 'Not specified' && !userData.interests.includes(answers.field)) userData.interests.push(answers.field);
+            if(answers.work !== 'Not specified' && !userData.interests.includes(answers.work)) userData.interests.push(answers.work);
+
+            renderTags('skills');
+            renderTags('interests');
+            
+            const prompt = `Based on these quiz answers, generate a concise professional summary (2-3 sentences) for a resume.
+            - Education: ${document.getElementById('ug-stream').value}
+            - Field Interest: ${answers.field}
+            - Preferred Work Type: ${answers.work}
+            - Project Experience: ${answers.project || 'None specified'}
+            - Stated Skills: ${answers.skills || 'None specified'}
+            Format as a single paragraph of plain text.`;
+            
+            userData.aiSummary = await callGeminiAPI(prompt);
+
+            submitBtn.disabled = false;
+            submitBtn.innerText = 'Generate My Summary';
+            
+            showToast('✅ AI summary generated and profile updated!');
+            saveProfileAndProceed();
+        }
+
+        // --- Career Path Logic ---
+        async function handleDirectionChoice(direction) {
+            userData.direction = direction;
+            const pathContent = document.getElementById('path-content');
+            let prompt = '';
+            let title = '';
+            let icon = '';
+            let action = '';
+
+            pathContent.innerHTML = `<div class="flex items-center justify-center p-8"><div class="loader"></div><p class="ml-4 text-muted-color">Finding relevant options...</p></div>`;
+            showStep('path-step');
+
+            if (direction === 'job-roles') {
+                title = `Job Role Suggestions for a ${userData.ugStream} Graduate`;
+                prompt = `List 5 to 7 potential job roles for a person with a ${userData.ugStream} degree and interests in [${userData.interests.join(', ')}]. Just return a simple comma-separated list, e.g., "Role A, Role B, Role C".`;
+                icon = 'ph-magic-wand';
+                action = 'generateAiRoadmap';
+            } else if (direction === 'higher-studies') {
+                title = `Higher Study Fields for a ${userData.ugStream} Graduate`;
+                prompt = `List 5 to 7 potential postgraduate fields of study for a person with a ${userData.ugStream} degree and interests in [${userData.interests.join(', ')}]. Just return a simple comma-separated list, e.g., "Field A, Field B, Field C".`;
+                icon = 'ph-graduation-cap';
+                action = 'generateAiHigherStudiesPlan';
+            } else { // Competitive Exams
+                title = `Competitive Exams for a ${userData.ugStream} Graduate`;
+                prompt = `List 5 to 7 relevant competitive exams (like UPSC CSE, IBPS PO, GATE, etc.) for a person with a ${userData.ugStream} degree. Just return a simple comma-separated list, e.g., "Exam A, Exam B, Exam C".`;
+                icon = 'ph-bank';
+                action = 'generatePathResult';
+            }
+
+            const response = await callGeminiAPI(prompt);
+            
+            if (typeof response !== 'string' || response.includes('<p')) {
+                 pathContent.innerHTML = `<p class="text-red-500 text-center">${response}</p>`;
+                 return;
+            }
+
+            const options = response.split(',').map(s => s.trim()).filter(Boolean);
+
+            let contentHtml = `
+                <h2 class="text-2xl font-bold flex items-center"><i class="ph ${icon} mr-3 text-2xl text-indigo-500"></i>${title}</h2>
+                <p class="mt-2 text-muted-color">Here are some AI-powered suggestions based on your profile. Click one to learn more.</p>
+                <div class="mt-6 space-y-4">
+                    ${options.map((option, i) => `<button class="w-full text-left p-4 border rounded-lg hover:bg-white/10 border-border-color font-medium transition-colors fade-in" style="--delay: ${i * 0.1}s" onclick="${action}('${option}')"><i class="ph ${icon} mr-2"></i> ${option}</button>`).join('')}
+                </div>`;
+            pathContent.innerHTML = contentHtml;
+        }
+        
+        // --- Gemini API & AI Content Generation ---
+        async function callGeminiAPI(prompt) {
+            const maxRetries = 3;
+            let delay = 1000;
+            const payload = { contents: [{ parts: [{ text: prompt }] }] };
+
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (response.ok) {
+                        const result = await response.json();
+                        const candidate = result.candidates?.[0];
+                        return candidate?.content?.parts?.[0]?.text || 'No options found.';
+                    }
+                    if (response.status >= 500) {
+                        if (i === maxRetries - 1) throw new Error(`API request failed with status ${response.status} after ${maxRetries} attempts.`);
+                        await new Promise(res => setTimeout(res, delay));
+                        delay *= 2;
+                    } else {
+                        throw new Error(`API request failed with non-retryable status ${response.status}`);
+                    }
+                } catch (error) {
+                    console.error("API Call Error:", error);
+                    if (i === maxRetries - 1) return `<p class="text-red-500">An error occurred: ${error.message}.</p>`;
+                    await new Promise(res => setTimeout(res, delay));
+                    delay *= 2;
+                }
+            }
+        }
+        
+        function setSummaryLoading(message) {
+            const summaryPlanDiv = document.getElementById('summary-plan');
+            const pdfBtn = document.getElementById('download-pdf-btn');
+            
+            if(pdfBtn) {
+                pdfBtn.disabled = true;
+                pdfBtn.innerHTML = 'Generating Report... <span class="loader loader-light"></span>';
+            }
+
+            if(summaryPlanDiv) {
+                summaryPlanDiv.innerHTML = `<div class="flex items-center justify-center p-8"><div class="loader"></div><p class="ml-4 text-muted-color">${message}</p></div>`;
+            }
+            ['profile-strength-analysis', 'skill-gap-analysis', 'ai-features', 'project-ideas', 'day-in-life', 'interview-prep', 'resource-hub'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.innerHTML = '';
+            });
+            populateSummary('');
+            showStep('summary-step');
+        }
+
+        async function generateAiRoadmap(role) {
+            userData.pathSelection = role;
+            setSummaryLoading('✨ Analyzing skill gap and generating roadmap...');
+            
+            const requiredSkillsPrompt = `For the job role "${role}", list the top 8 most essential skills. Return only a simple comma-separated list.`;
+            const requiredSkillsText = await callGeminiAPI(requiredSkillsPrompt);
+            
+            if (typeof requiredSkillsText !== 'string' || requiredSkillsText.includes('<p')) {
+                document.getElementById('summary-plan').innerHTML = requiredSkillsText;
+                return;
+            }
+
+            const requiredSkills = requiredSkillsText.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+            const userSkillsLower = userData.skills.map(s => s.toLowerCase());
+
+            const matchedSkills = [...new Set(userSkillsLower.filter(skill => requiredSkills.some(req => skill.includes(req) || req.includes(skill))))];
+            const skillGaps = requiredSkills.filter(req => !userSkillsLower.some(skill => skill.includes(req) || req.includes(skill)));
+
+            document.getElementById('skill-gap-analysis').innerHTML = `
+                <h3 class="font-semibold text-lg mt-6">📊 Skill Gap Analysis for a ${role}</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2 text-sm">
+                    <div class="p-3 bg-green-50 dark:bg-green-900/50 rounded-lg">
+                        <h4 class="font-semibold text-green-800 dark:text-green-300">✅ Skills You Have</h4>
+                        <ul class="list-disc list-inside mt-1 text-muted-color">${matchedSkills.length > 0 ? matchedSkills.map(s => `<li>${s.charAt(0).toUpperCase() + s.slice(1)}</li>`).join('') : '<li>No matching top skills found.</li>'}</ul>
+                    </div>
+                    <div class="p-3 bg-amber-50 dark:bg-amber-900/50 rounded-lg">
+                        <h4 class="font-semibold text-amber-800 dark:text-amber-300">🎯 Skills to Develop</h4>
+                        <ul class="list-disc list-inside mt-1 text-muted-color">${skillGaps.length > 0 ? skillGaps.map(s => `<li>${s.charAt(0).toUpperCase() + s.slice(1)}</li>`).join('') : '<li>You have all the top skills!</li>'}</ul>
+                    </div>
+                </div>`;
+
+            const roadmapPrompt = `Act as an expert career mentor. Create a concise, step-by-step learning roadmap for a user who wants to become a "${role}". The user's background is ${userData.ugStream}. Their main goal is to learn these missing skills: [${skillGaps.join(', ')}]. The roadmap should prioritize acquiring these missing skills. Keep descriptions brief. Format as clean HTML with a title (<h3>), an ordered list (ol), and bolded step titles (<strong>).`;
+            const roadmapHtml = await callGeminiAPI(roadmapPrompt);
+
+            document.getElementById('summary-plan').innerHTML = roadmapHtml;
+            document.getElementById('ai-features').innerHTML = `
+                <button id="project-idea-btn" onclick="generateProjectIdeas(this)" class="btn-primary mt-4 px-4 py-2 rounded-lg font-semibold"><i class="ph ph-lightbulb mr-2"></i>Suggest Projects</button>
+                <button id="day-in-life-btn" onclick="generateDayInLife(this)" class="btn-primary mt-4 ml-2 px-4 py-2 rounded-lg font-semibold"><i class="ph ph-sun-dim mr-2"></i>A Day in the Life</button>
+                <button id="interview-prep-btn" onclick="generateInterviewPrep(this)" class="btn-primary mt-4 ml-2 px-4 py-2 rounded-lg font-semibold"><i class="ph ph-microphone-stage mr-2"></i>Interview Prep</button>
+            `;
+            populateResourceHub(role);
+            
+            setTimeout(() => {
+                const pdfBtn = document.getElementById('download-pdf-btn');
+                if (pdfBtn) {
+                    pdfBtn.disabled = false;
+                    pdfBtn.innerHTML = 'Download Report (PDF)';
+                }
+                showToast('✅ PDF Report is ready to download!');
+            }, 5000);
+        }
+        
+        async function generateAiHigherStudiesPlan(stream) {
+            userData.pathSelection = stream;
+            setSummaryLoading(`✨ Finding top colleges for ${stream}...`);
+            const prompt = `Act as an expert admissions counselor specializing in Indian higher education. The user with a ${userData.ugStream} degree is interested in "${stream}" for higher studies in India. Skills: [${userData.skills.join(', ')}]. Provide a brief list of the top 3-4 universities in India for this field. Also, suggest key entrance exams and a brief preparation strategy. Keep all descriptions concise. Format as clean HTML with a main title (<h3>) and sections (<h4>) for 'Top Indian Universities', 'Key Entrance Exams', and 'Prep Strategy'.`;
+            const planHtml = await callGeminiAPI(prompt);
+            document.getElementById('summary-plan').innerHTML = planHtml;
+            populateResourceHub(stream);
+            setTimeout(() => {
+                const pdfBtn = document.getElementById('download-pdf-btn');
+                if (pdfBtn) {
+                    pdfBtn.disabled = false;
+                    pdfBtn.innerHTML = 'Download Report (PDF)';
+                }
+                showToast('✅ PDF Report is ready to download!');
+            }, 5000);
+        }
+
+        async function generateProjectIdeas(button) {
+             const div = document.getElementById('project-ideas');
+             button.disabled = true;
+             div.innerHTML = '<div class="flex items-center mt-4"><div class="loader"></div><p class="ml-3 text-muted-color">✨ Brainstorming project ideas...</p></div>';
+             const prompt = `Act as a mentor. Suggest 3 creative portfolio project ideas for an aspiring "${userData.pathSelection}" with a background in ${userData.ugStream}. For each project, provide a title (<h4>) and a brief 1-2 sentence description (<p>). Format as clean HTML.`;
+             div.innerHTML = await callGeminiAPI(prompt);
+             button.disabled = false;
+        }
+
+        async function generateDayInLife(button) {
+             const div = document.getElementById('day-in-life');
+             button.disabled = true;
+             div.innerHTML = '<div class="flex items-center mt-4"><div class="loader"></div><p class="ml-3 text-muted-color">✨ Describing a typical day...</p></div>';
+             const prompt = `Describe a typical "day in the life" of a ${userData.pathSelection}. Make it engaging, concise, and realistic, covering key tasks and interactions. Format as clean HTML with a title (<h3>) and a paragraph (<p>).`;
+             div.innerHTML = await callGeminiAPI(prompt);
+             button.disabled = false;
+        }
+        
+        async function generateInterviewPrep(button) {
+            const div = document.getElementById('interview-prep');
+            button.disabled = true;
+            div.innerHTML = '<div class="flex items-center mt-4"><div class="loader"></div><p class="ml-3 text-muted-color">✨ Generating interview questions...</p></div>';
+            const prompt = `Act as a hiring manager. For a candidate applying for a "${userData.pathSelection}" role, generate 5 common interview questions. Provide a very brief, one-sentence tip for answering each one. Keep it concise. Format as clean HTML with a main title (<h3>), and an ordered list (ol) where each list item contains the question (<strong>) and the tip (<p>).`;
+            div.innerHTML = await callGeminiAPI(prompt);
+            button.disabled = false;
+        }
+
+        async function generatePathResult(selection) {
+            userData.pathSelection = selection;
+            setSummaryLoading(`✨ Generating a plan for ${selection}...`);
+            const prompt = `Provide a brief overview for the competitive exam "${selection}". Include a short list of top preparation resources and the primary recruiting bodies. Keep it concise. Format as clean HTML with a main title (<h3>), and sections (<h4>) for 'Top Prep Resources' and 'Recruiting Bodies'.`;
+            const resultHtml = await callGeminiAPI(prompt);
+            populateSummary(resultHtml);
+            populateResourceHub(selection);
+            setTimeout(() => {
+                const pdfBtn = document.getElementById('download-pdf-btn');
+                if (pdfBtn) {
+                    pdfBtn.disabled = false;
+                    pdfBtn.innerHTML = 'Download Report (PDF)';
+                }
+                showToast('✅ PDF Report is ready to download!');
+            }, 5000);
+        }
+        
+        function calculateResumeScore() {
+            let score = 0;
+            const { skills, interests, projects, aiSummary } = userData;
+            const resumeUploaded = document.getElementById('resume').files.length > 0;
+
+            if (skills.length > 0) score += 1;
+            if (interests.length > 0) score += 0.5;
+            if (projects.trim() !== '') score += 1.5;
+            if (resumeUploaded || aiSummary.trim() !== '') score += 2;
+
+            return Math.min(score, 5);
+        }
+
+        function generateStarRating(score) {
+            const fullStars = Math.floor(score);
+            const halfStar = score % 1 >= 0.5 ? 1 : 0;
+            const emptyStars = 5 - fullStars - halfStar;
+            return '★'.repeat(fullStars) + (halfStar ? '½' : '') + '☆'.repeat(emptyStars);
+        }
+
+        function populateSummary(planHtml) {
+            const score = calculateResumeScore();
+            userData.resumeScore = score;
+            const starRating = generateStarRating(score);
+            const scoreColor = score >= 4 ? 'text-green-500' : score >= 2.5 ? 'text-amber-500' : 'text-red-500';
+
+            document.getElementById('summary-profile').innerHTML = `
+                <p><strong>Name:</strong> ${userData.name || 'N/A'}</p>
+                <p><strong>Education:</strong> ${userData.ugStream} (${userData.ugMarks || 'N/A'})</p>
+                <p><strong>Skills:</strong> ${userData.skills.join(', ') || 'N/A'}</p>
+                <p><strong>Interests:</strong> ${userData.interests.join(', ') || 'N/A'}</p>
+            `;
+            
+            document.getElementById('profile-strength-analysis').innerHTML = `
+                <div class="p-4 border rounded-lg bg-white/5 border-border-color">
+                    <h3 class="font-semibold text-lg">💪 Profile Strength</h3>
+                    <p class="text-3xl font-bold mt-2 ${scoreColor}">${score.toFixed(1)} / 5.0</p>
+                    <p class="text-2xl ${scoreColor}">${starRating}</p>
+                    <p class="text-xs text-muted-color mt-1">This score is an AI-powered estimate based on the completeness of your profile.</p>
+                </div>
+            `;
+            
+            const summaryContainer = document.getElementById('ai-resume-summary');
+            if(userData.aiSummary && summaryContainer) {
+                summaryContainer.innerHTML = `<div class="mt-6 p-4 border rounded-lg bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-800">
+                    <h3 class="font-semibold text-lg text-indigo-800 dark:text-indigo-200">🤖 Your AI-Generated Summary</h3>
+                    <p class="mt-2 text-sm text-muted-color">${userData.aiSummary}</p>
+                </div>`;
+            } else if(summaryContainer) {
+                summaryContainer.innerHTML = '';
+            }
+
+            if (planHtml) {
+                document.getElementById('summary-plan').innerHTML = planHtml;
+                 ['ai-features', 'project-ideas', 'day-in-life', 'interview-prep', 'resource-hub'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.innerHTML = '';
+                 });
+            }
+        }
+        
+        function populateResourceHub(selection) {
+            const resources = careerData.resources[selection] || careerData.resources.default;
+            let hubHtml = `<h3 class="font-semibold text-lg mt-6">📚 Resource Hub</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">`;
+            for (const category in resources) {
+                hubHtml += `<div class="p-4 border rounded-lg bg-white/5 border-border-color fade-in" style="--delay: ${Object.keys(resources).indexOf(category) * 0.1}s">
+                    <h4 class="font-semibold">${category}</h4>
+                    <p class="text-sm text-muted-color">${resources[category]}</p>
+                </div>`;
+            }
+            hubHtml += `</div>`;
+            const hubEl = document.getElementById('resource-hub');
+            if (hubEl) hubEl.innerHTML = hubHtml;
+        }
+
+        async function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const content = document.getElementById('summary-content-to-pdf');
+            if (!content) return;
+            const canvas = await html2canvas(content, { scale: 2, backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--card-bg-color') });
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save(`AI_Mentor_Report_${userData.name || 'User'}.pdf`);
+        }
+
+        function handleFeedback(isHelpful) {
+            const responseDiv = document.getElementById('feedback-response');
+            if(responseDiv) {
+                responseDiv.textContent = isHelpful ? "Fantastic! I'm glad I could help." : "Thank you for your feedback! I'm always learning.";
+            }
+            const finalName = document.getElementById('final-user-name');
+            if(finalName) finalName.textContent = userData.name;
+            setTimeout(() => showStep('goodbye-step'), 1500);
+        }
+
+        function restart() { location.reload(); }
+        
+        function triggerConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            if (!canvas || typeof confetti === 'undefined') return;
+            const myConfetti = confetti.create(canvas, {
+                resize: true,
+                useWorker: true
+            });
+            myConfetti({ particleCount: 150, spread: 160 });
+        }
+
+        // --- Helpers: Dark Mode, Clipboard ---
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'));
+        }
+        function checkDarkModePreference() {
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.documentElement.classList.add('dark');
+                const toggle = document.getElementById('dark-mode-toggle');
+                if (toggle) toggle.checked = true;
+            }
+        }
+        function copyToClipboard(elementId) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            const content = el.innerText;
+            navigator.clipboard.writeText(content).then(() => {
+                showToast('Copied to clipboard!');
+            }, () => {
+                showToast('Failed to copy.');
+            });
+        }
+    </script>
+
+</body>
+</html>
+<!---->
+<!---->
+<!---->
+<!---->
+<!---->
